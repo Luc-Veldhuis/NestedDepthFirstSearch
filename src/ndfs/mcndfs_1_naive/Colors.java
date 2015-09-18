@@ -47,4 +47,8 @@ public class Colors {
             map.put(state, color);
         }
     }
+
+    public Color getColor(State state) {
+        return map.get(state);
+    }
 }

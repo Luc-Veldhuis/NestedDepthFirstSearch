@@ -20,8 +20,9 @@ import ndfs.ResultException;
  */
 public class NNDFS implements NDFS {
 
-    private final Graph graph;
     private final Colors colors = new Colors();
+    private final File promelaFile;
+    private final int numberOfWorkers;
 
     /**
      * Constructs an NDFS object using the specified Promela file.
@@ -30,49 +31,25 @@ public class NNDFS implements NDFS {
      *            the Promela file.
      * @param nrWorkers
      *            the number of worker threads to use.
-     * @throws FileNotFoundException
-     *             is thrown in case the file could not be read.
      */
-    public NNDFS(File promelaFile, int nrWorkers) throws FileNotFoundException {
+    public NNDFS(File promelaFile, int nrWorkers) {
 
-        this.graph = GraphFactory.createGraph(promelaFile);
-    }
-
-    private void dfsRed(State s) throws ResultException {
-
-        for (State t : graph.post(s)) {
-            if (colors.hasColor(t, Color.CYAN)) {
-                throw new CycleFoundException();
-            } else if (colors.hasColor(t, Color.BLUE)) {
-                colors.color(t, Color.RED);
-                dfsRed(t);
-            }
-        }
-    }
-
-    private void dfsBlue(State s) throws ResultException {
-
-        colors.color(s, Color.CYAN);
-        for (State t : graph.post(s)) {
-            if (colors.hasColor(t, Color.WHITE)) {
-                dfsBlue(t);
-            }
-        }
-        if (s.isAccepting()) {
-            dfsRed(s);
-            colors.color(s, Color.RED);
-        } else {
-            colors.color(s, Color.BLUE);
-        }
-    }
-
-    private void nndfs(State s) throws ResultException {
-        dfsBlue(s);
-        throw new NoCycleFoundException();
+        this.promelaFile = promelaFile;
+        this.numberOfWorkers = nrWorkers;
     }
 
     @Override
     public void ndfs() throws ResultException {
-        nndfs(graph.getInitialState());
+        Worker[] workers = new Worker[numberOfWorkers];
+        for(int i = 0; i < numberOfWorkers; i++) {
+            try {
+                workers[i] = new Worker(promelaFile, colors, i);
+                workers[i].start();
+            } catch (FileNotFoundException file) {
+                System.out.println(file);
+                file.printStackTrace();
+                System.exit(1);
+            }
+        }
     }
 }
