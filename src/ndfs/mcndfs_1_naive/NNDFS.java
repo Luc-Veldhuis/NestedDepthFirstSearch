@@ -23,6 +23,7 @@ public class NNDFS implements NDFS {
     private final Colors colors = new Colors();
     private final File promelaFile;
     private final int numberOfWorkers;
+    private final ResultArray resultArray;
 
     /**
      * Constructs an NDFS object using the specified Promela file.
@@ -36,6 +37,7 @@ public class NNDFS implements NDFS {
 
         this.promelaFile = promelaFile;
         this.numberOfWorkers = nrWorkers;
+        this.resultArray = new ResultArray(this.numberOfWorkers);
     }
 
     @Override
@@ -43,13 +45,21 @@ public class NNDFS implements NDFS {
         Worker[] workers = new Worker[numberOfWorkers];
         for(int i = 0; i < numberOfWorkers; i++) {
             try {
-                workers[i] = new Worker(promelaFile, colors, i);
+                workers[i] = new Worker(promelaFile, colors, i, resultArray);
                 workers[i].start();
             } catch (FileNotFoundException file) {
                 System.out.println(file);
                 file.printStackTrace();
                 System.exit(1);
             }
+        }
+        //wait for threads to die
+        while (!resultArray.hasCycle() && !resultArray.allFilled());
+        //all threads finished or cycle is found
+        if( resultArray.hasCycle()) {
+            throw new CycleFoundException();
+        } else {
+            throw new NoCycleFoundException();
         }
     }
 }

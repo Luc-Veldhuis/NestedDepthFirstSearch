@@ -10,7 +10,7 @@ import graph.State;
  */
 public class Colors {
 
-    private final Map<State, Color> map = new HashMap<State, Color>();
+    private final Map<Integer, Color> map = new HashMap<Integer, Color>();
 
     /**
      * Returns <code>true</code> if the specified state has the specified color,
@@ -26,9 +26,9 @@ public class Colors {
 
         // The initial color is white, and is not explicitly represented.
         if (color == Color.WHITE) {
-            return map.get(state) == null;
+            return map.get(state.hashCode()) == null;
         } else {
-            return map.get(state) == color;
+            return map.get(state.hashCode()) == color;
         }
     }
 
@@ -42,13 +42,13 @@ public class Colors {
      */
     public void color(State state, Color color) {
         if (color == Color.WHITE) {
-            map.remove(state);
+            map.remove(state.hashCode());
         } else {
-            map.put(state, color);
+            map.put(state.hashCode(), color);
         }
     }
 
     public Color getColor(State state) {
-        return map.get(state);
+        return map.get(state.hashCode());
     }
 }

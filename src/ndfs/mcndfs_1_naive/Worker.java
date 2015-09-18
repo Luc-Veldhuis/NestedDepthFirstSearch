@@ -6,7 +6,6 @@ import graph.State;
 import ndfs.CycleFoundException;
 import ndfs.NoCycleFoundException;
 import ndfs.ResultException;
-import spinja.Run;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -15,13 +14,15 @@ public class Worker implements Runnable {
 
     private final Graph graph;
     private final Colors colors;
-    private Thread thread;
     private int threadId;
+    private ResultArray resultArray;
+    public Thread thread;
 
-    public Worker(File promelaFile, Colors colors, int threadId) throws FileNotFoundException {
+    public Worker(File promelaFile, Colors colors, int threadId, ResultArray resultArray) throws FileNotFoundException {
         this.graph = GraphFactory.createGraph(promelaFile);
         this.colors = colors;
         this.threadId = threadId;
+        this.resultArray = resultArray;
     }
 
     private void dfsRed(State s) throws ResultException {
@@ -63,8 +64,15 @@ public class Worker implements Runnable {
         try {
             nndfs(s);
         } catch (ResultException result) {
-            System.out.println(result);
-            System.exit(0);
+            if( result instanceof NoCycleFoundException) {
+                resultArray.set(Result.NOCYCLE, threadId);
+            }
+            else if (result instanceof  CycleFoundException) {
+                resultArray.set(Result.CYCLE, threadId);
+            }
+            else{
+                resultArray.set(Result.ERROR, threadId);
+            }
         }
 
     }
@@ -73,7 +81,7 @@ public class Worker implements Runnable {
         if (thread == null)
         {
             thread = new Thread (this, Integer.toString(threadId));
-            thread.start ();
+            thread.start();
         }
 
     }
