@@ -17,15 +17,18 @@ public class Worker implements Runnable {
     private final Graph graph;
     private final Colors colors;
     private static AtomicInteger redStateCounter;
-    private Colors pink; //ik gebruik maar Colors ipv nieuwe map met binaries
+    private final Colors pink; //ik gebruik maar Colors ipv nieuwe map met binaries
+    private final Colors red;
     private int threadId;
     private ResultArray resultArray;
     public Thread thread;
     
     
-    public Worker(File promelaFile, Colors colors, int threadId, ResultArray resultArray) throws FileNotFoundException {
+    public Worker(File promelaFile, int threadId, Colors red, ResultArray resultArray) throws FileNotFoundException {
         this.graph = GraphFactory.createGraph(promelaFile);
-        this.colors = colors;
+        this.red = red;
+        pink = new Colors();
+        colors = new Colors();
         this.threadId = threadId;
         this.resultArray = resultArray;
         redStateCounter = new AtomicInteger();
@@ -36,7 +39,7 @@ public class Worker implements Runnable {
         for (State t : graph.post(s)) {
             if (colors.hasColor(t, Color.CYAN)) {
                 throw new CycleFoundException();
-            } else if (!colors.hasColor(t, Color.RED) && !pink.hasColor(t,Color.PINK)) {
+            } else if (!pink.hasColor(t, Color.PINK) && !red.hasColor(t, Color.RED)) {
                 dfsRed(t);
             }
         }
@@ -44,14 +47,14 @@ public class Worker implements Runnable {
         	redStateCounter.getAndDecrement();
         	while (redStateCounter.get() != 0){}
         }
-        colors.color(s,Color.RED);
+        red.color(s,Color.RED);
         pink.color(s, null); //mogelijk een probleem als compare methode niet met null om kan gaan, white / alternatieve kleur gebruiken?
     }
     
     private void dfsBlue(State s) throws ResultException {
         colors.color(s, Color.CYAN);
         for (State t : graph.post(s)) {
-            if (colors.hasColor(t, Color.WHITE) && !colors.hasColor(t,Color.RED)) {
+            if (colors.hasColor(t, Color.WHITE) && !red.hasColor(t,Color.RED)) {
                 dfsBlue(t);
             }
         }

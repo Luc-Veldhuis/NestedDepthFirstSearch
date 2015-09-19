@@ -20,7 +20,7 @@ import ndfs.ResultException;
  */
 public class NNDFS implements NDFS {
 
-    private final Colors colors = new Colors();
+    private final Colors red = new Colors();
     private final File promelaFile;
     private final int numberOfWorkers;
     private final ResultArray resultArray;
@@ -45,7 +45,7 @@ public class NNDFS implements NDFS {
         Worker[] workers = new Worker[numberOfWorkers];
         for(int i = 0; i < numberOfWorkers; i++) {
             try {
-                workers[i] = new Worker(promelaFile, colors, i, resultArray);
+                workers[i] = new Worker(promelaFile, i, red, resultArray);
                 workers[i].start();
             } catch (FileNotFoundException file) {
                 System.out.println(file);
