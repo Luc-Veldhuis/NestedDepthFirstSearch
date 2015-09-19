@@ -17,7 +17,7 @@ public class Worker implements Runnable {
     private final Graph graph;
     private final Colors colors;
     private static AtomicInteger redStateCounter;
-    private final Colors pink; //ik gebruik maar Colors ipv nieuwe map met binaries
+    private final Colors pink;
     private final Colors red;
     private int threadId;
     private ResultArray resultArray;
@@ -48,7 +48,7 @@ public class Worker implements Runnable {
         	while (redStateCounter.get() != 0){}
         }
         red.color(s,Color.RED);
-        pink.color(s, null); //mogelijk een probleem als compare methode niet met null om kan gaan, white / alternatieve kleur gebruiken?
+        pink.color(s, Color.WHITE);
     }
     
     private void dfsBlue(State s) throws ResultException {

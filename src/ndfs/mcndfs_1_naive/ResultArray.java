@@ -1,15 +1,17 @@
 package ndfs.mcndfs_1_naive;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Created by Luc on 18-9-2015.
  */
 public class ResultArray {
     private volatile Result[] resultArray;
-    private int filled;
+    private AtomicInteger filled;
 
     public ResultArray(int length){
         resultArray = new Result[length];
-        this.filled = 0;
+        this.filled = new AtomicInteger(0);
     }
 
     public Result get(int index) {
@@ -18,11 +20,11 @@ public class ResultArray {
 
     public void set(Result result, int index) {
         resultArray[index] = result;
-        filled++;
+        filled.getAndIncrement();
     }
 
     public boolean allFilled() {
-        return filled == resultArray.length;
+        return filled.get() == resultArray.length;
     }
 
     public boolean hasCycle() {
@@ -32,5 +34,14 @@ public class ResultArray {
             }
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        String resultText = "";
+        for(Result result : resultArray) {
+            resultText += result;
+        }
+        return resultText;
     }
 }
