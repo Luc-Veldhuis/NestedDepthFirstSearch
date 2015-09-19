@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by Luc on 18-9-2015.
  */
 public class ResultArray {
-    private volatile Result[] resultArray;
+    private Result[] resultArray;
     private AtomicInteger filled;
 
     public ResultArray(int length){
