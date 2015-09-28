@@ -22,7 +22,7 @@ public class Colors {
      *            the color
      * @return whether the specified state has the specified color.
      */
-    public boolean hasColor(State state, Color color) {
+    public synchronized boolean hasColor(State state, Color color) {
 
         // The initial color is white, and is not explicitly represented.
         if (color == Color.WHITE) {
@@ -40,7 +40,7 @@ public class Colors {
      * @param color
      *            color to give to the state.
      */
-    public void color(State state, Color color) {
+    public synchronized void color(State state, Color color) {
         if (color == Color.WHITE) {
             map.remove(state.hashCode());
         } else {

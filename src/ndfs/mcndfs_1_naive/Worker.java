@@ -6,6 +6,8 @@ import graph.State;
 import ndfs.CycleFoundException;
 import ndfs.NoCycleFoundException;
 import ndfs.ResultException;
+
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import java.io.File;
@@ -36,7 +38,9 @@ public class Worker implements Runnable {
 
     private void dfsRed(State s) throws ResultException {
     	pink.color(s, Color.PINK);
-        for (State t : graph.post(s)) {
+        List graphList = graph.post(s);
+        for (int i = 0; i < graphList.size(); i++) {
+            State t = (State) graphList.get((i+threadId) % graphList.size());
             if (colors.hasColor(t, Color.CYAN)) {
                 throw new CycleFoundException();
             } else if (!pink.hasColor(t, Color.PINK) && !red.hasColor(t, Color.RED)) {
@@ -47,7 +51,9 @@ public class Worker implements Runnable {
         	redStateCounter.getAndDecrement();
         	while (redStateCounter.get() != 0){}
         }
-        red.color(s,Color.RED);
+
+        red.color(s, Color.RED);
+
         pink.color(s, Color.WHITE);
     }
     
