@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Condition;
 
 /**
  * This is a straightforward implementation of Figure 1 of
@@ -23,7 +22,7 @@ public class NNDFS implements NDFS {
     private final Colors red = new Colors();
     private final File promelaFile;
     private final int numberOfWorkers;
-    private final ResultTracker resultArray;
+    private final ResultTracker resultTracker;
 
     /**
      * Constructs an NDFS object using the specified Promela file.
@@ -37,7 +36,7 @@ public class NNDFS implements NDFS {
 
         this.promelaFile = promelaFile;
         this.numberOfWorkers = nrWorkers;
-        this.resultArray = new ResultTracker(this.numberOfWorkers);
+        this.resultTracker = new ResultTracker(this.numberOfWorkers);
     }
 
     @Override
@@ -46,7 +45,7 @@ public class NNDFS implements NDFS {
         Worker[] workers = new Worker[numberOfWorkers];
         for(int i = 0; i < numberOfWorkers; i++) {
             try {
-                workers[i] = new Worker(promelaFile, i, red, resultArray, this);
+                workers[i] = new Worker(promelaFile, i, red, resultTracker, this);
                 executor.execute(workers[i]);
             } catch (FileNotFoundException file) {
                 System.out.println(file);
@@ -55,18 +54,18 @@ public class NNDFS implements NDFS {
             }
         }
         //wait for threads to die
-       // try{
+        try{
             synchronized (this){
-                while (!resultArray.hasCycle() && !resultArray.allFilled()) {
-                    //this.wait();
+                while (!resultTracker.hasCycle() && !resultTracker.allFilled()) {
+                    this.wait();
                 }
             }
-        //} catch(InterruptedException error) {
-            //throw new Error("Main thread interrupted");
-        //}
+        } catch(InterruptedException error) {
+            throw new Error("Main thread interrupted");
+        }
         executor.shutdownNow();
         //all threads finished or cycle is found
-        if( resultArray.hasCycle()) {
+        if( resultTracker.hasCycle()) {
             throw new CycleFoundException();
         } else {
             throw new NoCycleFoundException();
