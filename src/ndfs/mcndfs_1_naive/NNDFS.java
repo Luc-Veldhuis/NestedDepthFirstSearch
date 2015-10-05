@@ -2,10 +2,9 @@ package ndfs.mcndfs_1_naive;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import graph.Graph;
-import graph.GraphFactory;
-import graph.State;
 import ndfs.CycleFoundException;
 import ndfs.NDFS;
 import ndfs.NoCycleFoundException;
@@ -42,11 +41,12 @@ public class NNDFS implements NDFS {
 
     @Override
     public void ndfs() throws ResultException {
+        ExecutorService executor = Executors.newFixedThreadPool(numberOfWorkers);
         Worker[] workers = new Worker[numberOfWorkers];
         for(int i = 0; i < numberOfWorkers; i++) {
             try {
                 workers[i] = new Worker(promelaFile, i, red, resultArray);
-                workers[i].start();
+                executor.execute(workers[i]);
             } catch (FileNotFoundException file) {
                 System.out.println(file);
                 file.printStackTrace();
@@ -55,6 +55,7 @@ public class NNDFS implements NDFS {
         }
         //wait for threads to die
         while (!resultArray.hasCycle() && !resultArray.allFilled());
+        executor.shutdownNow();
         //all threads finished or cycle is found
         if( resultArray.hasCycle()) {
             throw new CycleFoundException();

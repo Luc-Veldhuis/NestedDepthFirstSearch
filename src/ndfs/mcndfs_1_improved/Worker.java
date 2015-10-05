@@ -21,17 +21,19 @@ public class Worker implements Runnable {
     private final Colors pink;
     private final Colors red;
     private int threadId;
-    private ResultArray resultArray;
+    private ResultTracker tracker;
+    private Object main;
     public Thread thread;
 
 
-    public Worker(File promelaFile, int threadId, Colors red, ResultArray resultArray) throws FileNotFoundException {
+    public Worker(File promelaFile, int threadId, Colors red, ResultTracker tracker, Object main) throws FileNotFoundException {
         this.graph = GraphFactory.createGraph(promelaFile);
         this.red = red;
         pink = new Colors();
         colors = new Colors();
         this.threadId = threadId;
-        this.resultArray = resultArray;
+        this.tracker = tracker;
+        this.main = main;
         redStateCounter = new AtomicInteger();
     }
 
@@ -82,13 +84,13 @@ public class Worker implements Runnable {
             nndfs(s);
         } catch (ResultException result) {
             if( result instanceof NoCycleFoundException) {
-                resultArray.set(Result.NOCYCLE, threadId);
+                tracker.noCycle();
             }
             else if (result instanceof  CycleFoundException) {
-                resultArray.set(Result.CYCLE, threadId);
+                tracker.cycleFound();
             }
-            else{
-                resultArray.set(Result.ERROR, threadId);
+            synchronized (main) {
+                main.notifyAll();
             }
         }
 

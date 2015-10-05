@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
 
 /**
  * This is a straightforward implementation of Figure 1 of
@@ -22,7 +23,7 @@ public class NNDFS implements NDFS {
     private final Colors red = new Colors();
     private final File promelaFile;
     private final int numberOfWorkers;
-    private final ResultArray resultArray;
+    private final ResultTracker resultArray;
 
     /**
      * Constructs an NDFS object using the specified Promela file.
@@ -36,16 +37,17 @@ public class NNDFS implements NDFS {
 
         this.promelaFile = promelaFile;
         this.numberOfWorkers = nrWorkers;
-        this.resultArray = new ResultArray(this.numberOfWorkers);
+        this.resultArray = new ResultTracker(this.numberOfWorkers);
     }
 
     @Override
     public void ndfs() throws ResultException {
+        ExecutorService executor = Executors.newFixedThreadPool(numberOfWorkers);
         Worker[] workers = new Worker[numberOfWorkers];
         for(int i = 0; i < numberOfWorkers; i++) {
             try {
-                workers[i] = new Worker(promelaFile, i, red, resultArray);
-                workers[i].start();
+                workers[i] = new Worker(promelaFile, i, red, resultArray, this);
+                executor.execute(workers[i]);
             } catch (FileNotFoundException file) {
                 System.out.println(file);
                 file.printStackTrace();
@@ -53,7 +55,16 @@ public class NNDFS implements NDFS {
             }
         }
         //wait for threads to die
-        while (!resultArray.hasCycle() && !resultArray.allFilled());
+       // try{
+            synchronized (this){
+                while (!resultArray.hasCycle() && !resultArray.allFilled()) {
+                    //this.wait();
+                }
+            }
+        //} catch(InterruptedException error) {
+            //throw new Error("Main thread interrupted");
+        //}
+        executor.shutdownNow();
         //all threads finished or cycle is found
         if( resultArray.hasCycle()) {
             throw new CycleFoundException();
