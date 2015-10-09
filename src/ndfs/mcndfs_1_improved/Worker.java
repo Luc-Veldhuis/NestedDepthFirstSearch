@@ -38,7 +38,7 @@ public class Worker implements Runnable {
         redStateCounter = new AtomicInteger();
     }
 
-    private void dfsRed(State s) throws ResultException {
+    private void dfsRed(State s) throws Exception {
     	pink.color(s, Color.PINK);
         for (State t: graph.post(s)) {
             if (colors.hasColor(t, Color.CYAN)) {
@@ -50,17 +50,22 @@ public class Worker implements Runnable {
         if(s.isAccepting()){
         	redStateCounter.getAndDecrement();
         	while (redStateCounter.get() != 0){
+                if(Thread.currentThread().isInterrupted()) {
+                    throw new Exception("Other threads are already done");
+                }
             }
         }
         red.color(s, Color.RED);
         pink.color(s, Color.WHITE);
     }
     
-    private void dfsBlue(State s, Splitter splitter) throws ResultException {
+    private void dfsBlue(State s, Splitter splitter) throws Exception {
+        if(Thread.currentThread().isInterrupted()) {
+            throw new Exception("Other threads are already done");
+        }
         colors.color(s, Color.CYAN);
         for (State t : splitter.getStates()) {
             if (colors.hasColor(t, Color.WHITE) && !red.hasColor(t,Color.RED)) {
-                //System.out.println(splitter.getStart() + " " + splitter.getEnd());
                 dfsBlue(t, new Splitter(threadId, splitter.getStart(), splitter.getEnd(), graph, t));
             }
         }
@@ -71,7 +76,7 @@ public class Worker implements Runnable {
         colors.color(s, Color.BLUE);
     }
 
-    private void nndfs(State s) throws ResultException {
+    private void nndfs(State s) throws Exception {
         dfsBlue(s, new Splitter(threadId, 0, numberOfWorkers, graph, s));
         throw new NoCycleFoundException();
     }
@@ -81,7 +86,7 @@ public class Worker implements Runnable {
         State s = graph.getInitialState();
         try {
             nndfs(s);
-        } catch (ResultException result) {
+        } catch (Exception result) {
             if( result instanceof NoCycleFoundException) {
                 tracker.noCycle();
             }
