@@ -36,7 +36,7 @@ public class Worker implements Runnable {
         redStateCounter = new AtomicInteger();
     }
 
-    private void dfsRed(State s) throws ResultException {
+    private void dfsRed(State s) throws Exception {
     	pink.color(s, Color.PINK);
         List graphList = graph.post(s);
         for (int i = 0; i < graphList.size(); i++) {
@@ -49,7 +49,11 @@ public class Worker implements Runnable {
         }
         if(s.isAccepting()){
         	redStateCounter.getAndDecrement();
-        	while (redStateCounter.get() != 0){}
+        	while (redStateCounter.get() != 0){
+                if(Thread.currentThread().isInterrupted()) {
+                    throw new Exception("Other threads are already done");
+                }
+            }
         }
 
         red.color(s, Color.RED);
@@ -57,7 +61,10 @@ public class Worker implements Runnable {
         pink.color(s, Color.WHITE);
     }
     
-    private void dfsBlue(State s) throws ResultException {
+    private void dfsBlue(State s) throws Exception {
+        if(Thread.currentThread().isInterrupted()) {
+            throw new Exception("Other threads are already done");
+        }
         colors.color(s, Color.CYAN);
         for (State t : graph.post(s)) {
             if (colors.hasColor(t, Color.WHITE) && !red.hasColor(t,Color.RED)) {
@@ -71,7 +78,7 @@ public class Worker implements Runnable {
         colors.color(s, Color.BLUE);
     }
 
-    private void nndfs(State s) throws ResultException {
+    private void nndfs(State s) throws Exception {
         dfsBlue(s);
         throw new NoCycleFoundException();
     }
@@ -81,7 +88,7 @@ public class Worker implements Runnable {
         State s = graph.getInitialState();
         try {
             nndfs(s);
-        } catch (ResultException result) {
+        } catch (Exception result) {
             if( result instanceof NoCycleFoundException) {
                 resultArray.set(Result.NOCYCLE, threadId);
             }
