@@ -45,7 +45,7 @@ public class NNDFS implements NDFS {
         Worker[] workers = new Worker[numberOfWorkers];
         for(int i = 0; i < numberOfWorkers; i++) {
             try {
-                workers[i] = new Worker(promelaFile, i, red, resultTracker, this);
+                workers[i] = new Worker(promelaFile, i, red, resultTracker, this, numberOfWorkers);
                 executor.execute(workers[i]);
             } catch (FileNotFoundException file) {
                 System.out.println(file);
