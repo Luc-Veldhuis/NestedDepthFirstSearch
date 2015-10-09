@@ -22,7 +22,7 @@ public class Colors {
      *            the color
      * @return whether the specified state has the specified color.
      */
-    public synchronized boolean hasColor(State state, Color color) {
+    public boolean hasColor(State state, Color color) {
 
         // The initial color is white, and is not explicitly represented.
         if (color == Color.WHITE) {
