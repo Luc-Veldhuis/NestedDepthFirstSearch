@@ -7,7 +7,7 @@ import ndfs.ResultException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,7 +45,7 @@ public class NNDFS implements NDFS {
     public void ndfs() throws ResultException {
         ExecutorService executor = Executors.newFixedThreadPool(numberOfWorkers);
         Worker[] workers = new Worker[numberOfWorkers];
-        HashMap<Integer, AtomicInteger> stateCounters = new HashMap<Integer, AtomicInteger>();
+        ConcurrentHashMap<Integer, AtomicInteger> stateCounters = new ConcurrentHashMap<Integer, AtomicInteger>();
         for(int i = 0; i < numberOfWorkers; i++) {
             try {
                 workers[i] = new Worker(promelaFile, i, red, resultTracker, this, numberOfWorkers, stateCounters);

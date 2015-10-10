@@ -59,7 +59,7 @@ public class NNDFS implements NDFS {
         //wait for threads to die
         while (!resultArray.hasCycle() && !resultArray.allFilled() && !resultArray.hasError());
         if(resultArray.hasError()) {
-            throw new Error("Redcounter = -1");
+            throw new Error("Something went wrong");
         }
         executor.shutdownNow();
         //all threads finished or cycle is found

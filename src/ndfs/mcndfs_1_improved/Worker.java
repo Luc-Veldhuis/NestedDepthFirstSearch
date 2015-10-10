@@ -9,7 +9,7 @@ import ndfs.ResultException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Worker implements Runnable {
@@ -17,7 +17,7 @@ public class Worker implements Runnable {
 	
     private final Graph graph;
     private final Colors colors;
-    private HashMap<Integer, AtomicInteger> redStateCounter;
+    private ConcurrentHashMap<Integer, AtomicInteger> redStateCounter;
     private final Colors pink;
     private final Colors red;
     private int threadId;
@@ -27,7 +27,7 @@ public class Worker implements Runnable {
     public Thread thread;
 
 
-    public Worker(File promelaFile, int threadId, Colors red, ResultTracker tracker, Object main, int numberOfWorkers, HashMap<Integer, AtomicInteger> stateCounter) throws FileNotFoundException {
+    public Worker(File promelaFile, int threadId, Colors red, ResultTracker tracker, Object main, int numberOfWorkers, ConcurrentHashMap<Integer, AtomicInteger> stateCounter) throws FileNotFoundException {
         this.graph = GraphFactory.createGraph(promelaFile);
         this.red = red;
         pink = new Colors();
@@ -49,15 +49,15 @@ public class Worker implements Runnable {
             }
         }
         if(s.isAccepting()){
-        	int counter = redStateCounter.get(s.hashCode()).getAndDecrement();
-        	while (counter != 0){
-                if(counter < 0) {
-                    throw new Exception("We crached");
-                }
+            if(!redStateCounter.containsKey(s.hashCode())) {
+                redStateCounter.put(s.hashCode(), new AtomicInteger(0));
+            }
+            AtomicInteger counter = redStateCounter.get(s.hashCode());
+            counter.getAndDecrement();
+        	while (counter.get() > 0){
                 if(Thread.currentThread().isInterrupted()) {
                     throw new Exception("Other threads are already done");
                 }
-                counter = redStateCounter.get(s.hashCode()).get();
             }
         }
         red.color(s, Color.RED);
@@ -75,6 +75,9 @@ public class Worker implements Runnable {
             }
         }
         if (s.isAccepting()) {
+            if(!redStateCounter.containsKey(s.hashCode())) {
+                redStateCounter.put(s.hashCode(), new AtomicInteger(0));
+            }
         	redStateCounter.get(s.hashCode()).getAndIncrement();
             dfsRed(s);
         }

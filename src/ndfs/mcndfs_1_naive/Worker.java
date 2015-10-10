@@ -49,12 +49,20 @@ public class Worker implements Runnable {
             }
         }
         if(s.isAccepting()){
-        	int counter = redStateCounter.get(s.hashCode()).getAndDecrement();
-        	while (counter > 0){
+            synchronized (redStateCounter) {
+                if(!redStateCounter.containsKey(s.hashCode())) {
+                    redStateCounter.put(s.hashCode(), new AtomicInteger(0));
+                }
+            }
+            AtomicInteger counter;
+            synchronized (redStateCounter) {
+                counter = redStateCounter.get(s.hashCode());
+            }
+            counter.getAndDecrement();
+        	while (counter.get() > 0){
                 if(Thread.currentThread().isInterrupted()) {
                     throw new Exception("Other threads are already done");
                 }
-                counter = redStateCounter.get(s.hashCode()).get();
             }
         }
 
@@ -74,7 +82,14 @@ public class Worker implements Runnable {
             }
         }
         if (s.isAccepting()) {
-        	redStateCounter.get(s.hashCode()).getAndIncrement();
+            synchronized (redStateCounter) {
+                if(!redStateCounter.containsKey(s.hashCode())) {
+                    redStateCounter.put(s.hashCode(), new AtomicInteger(0));
+                }
+            }
+            synchronized (redStateCounter) {
+                redStateCounter.get(s.hashCode()).getAndIncrement();
+            }
         	dfsRed(s);
         }
         colors.color(s, Color.BLUE);
@@ -98,6 +113,7 @@ public class Worker implements Runnable {
                 resultArray.set(Result.CYCLE, threadId);
             }
             else{
+                System.out.println(result.getMessage());
                 resultArray.set(Result.ERROR, threadId);
             }
         }
