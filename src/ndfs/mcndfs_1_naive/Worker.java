@@ -49,10 +49,15 @@ public class Worker implements Runnable {
         }
         if(s.isAccepting()){
         	redStateCounter.getAndDecrement();
-        	while (redStateCounter.get() != 0){
+            int counter =redStateCounter.get();
+        	while (counter != 0){
+                if(counter < 0) {
+                    throw new Exception("Something went wrong. This is not good.");
+                }
                 if(Thread.currentThread().isInterrupted()) {
                     throw new Exception("Other threads are already done");
                 }
+                counter = redStateCounter.get();
             }
         }
 

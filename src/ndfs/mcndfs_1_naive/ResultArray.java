@@ -36,6 +36,15 @@ public class ResultArray {
         return false;
     }
 
+    public boolean hasError() {
+        for(Result result : resultArray) {
+            if(result == Result.ERROR) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         String resultText = "";
