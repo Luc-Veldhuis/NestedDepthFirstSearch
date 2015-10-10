@@ -4,15 +4,15 @@ if [ "$#" -ne 2 ]; then
         echo "Usage <implementation> <runs>" >&2
         exit 1
 fi
-shortestTime=100000000000
-longestTime=0
-totalTime=0
 regex=" ([0-9]+) "
 files=input/*.prom
 for file in $files
 do
         for j in 1 4 16 64
         do
+                shortestTime=100000000000
+                longestTime=0
+                totalTime=0
                 echo "Processing $file on $j threads"
                 for i in `seq 1 $2`
                 do
