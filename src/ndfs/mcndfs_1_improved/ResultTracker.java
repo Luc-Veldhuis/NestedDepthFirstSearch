@@ -10,11 +10,13 @@ public class ResultTracker {
     private AtomicBoolean cycleFound;
     private AtomicInteger finished;
     private int length;
+    private boolean crached;
 
     public ResultTracker(int length){
         finished = new AtomicInteger(0);
         cycleFound = new AtomicBoolean(false);
         this.length = length;
+        crached = false;
     }
 
     public void noCycle() {
@@ -32,6 +34,14 @@ public class ResultTracker {
 
     public boolean allFilled() {
         return finished.get() == length;
+    }
+
+    public void setCrached() {
+        crached = true;
+    }
+
+    public boolean crashed() {
+        return crached;
     }
 
     @Override

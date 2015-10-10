@@ -49,10 +49,15 @@ public class Worker implements Runnable {
         }
         if(s.isAccepting()){
         	redStateCounter.getAndDecrement();
-        	while (redStateCounter.get() != 0){
+            int counter = redStateCounter.get();
+        	while (counter != 0){
+                if(counter < 0) {
+                    throw new Exception("We crached");
+                }
                 if(Thread.currentThread().isInterrupted()) {
                     throw new Exception("Other threads are already done");
                 }
+                counter = redStateCounter.get();
             }
         }
         red.color(s, Color.RED);
@@ -71,7 +76,7 @@ public class Worker implements Runnable {
         }
         if (s.isAccepting()) {
         	redStateCounter.getAndIncrement();
-        	dfsRed(s);
+            dfsRed(s);
         }
         colors.color(s, Color.BLUE);
     }
@@ -92,6 +97,10 @@ public class Worker implements Runnable {
             }
             else if (result instanceof  CycleFoundException) {
                 tracker.cycleFound();
+            }
+            else {
+                System.out.println(result.getMessage());
+                tracker.setCrached();
             }
             synchronized (main) {
                 main.notifyAll();
