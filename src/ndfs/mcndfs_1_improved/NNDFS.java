@@ -56,12 +56,15 @@ public class NNDFS implements NDFS {
         //wait for threads to die
         try{
             synchronized (this){
-                while (!resultTracker.hasCycle() && !resultTracker.allFilled()) {
+                while (!resultTracker.hasCycle() && !resultTracker.allFilled() && !resultTracker.crashed()) {
                     this.wait();
                 }
             }
         } catch(InterruptedException error) {
             throw new Error("Main thread interrupted");
+        }
+        if(resultTracker.crashed()) {
+            throw new Error("Something went wrong. This is not good");
         }
         executor.shutdownNow();
         //all threads finished or cycle is found
