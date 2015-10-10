@@ -7,6 +7,7 @@ import ndfs.CycleFoundException;
 import ndfs.NoCycleFoundException;
 import ndfs.ResultException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,7 +19,7 @@ public class Worker implements Runnable {
 	
     private final Graph graph;
     private final Colors colors;
-    private static AtomicInteger redStateCounter;
+    private HashMap<Integer, AtomicInteger> redStateCounter;
     private final Colors pink;
     private final Colors red;
     private int threadId;
@@ -26,21 +27,21 @@ public class Worker implements Runnable {
     public Thread thread;
     
     
-    public Worker(File promelaFile, int threadId, Colors red, ResultArray resultArray) throws FileNotFoundException {
+    public Worker(File promelaFile, int threadId, Colors red, ResultArray resultArray, HashMap<Integer, AtomicInteger> stateCounter) throws FileNotFoundException {
         this.graph = GraphFactory.createGraph(promelaFile);
         this.red = red;
         pink = new Colors();
         colors = new Colors();
         this.threadId = threadId;
         this.resultArray = resultArray;
-        redStateCounter = new AtomicInteger();
+        redStateCounter = stateCounter;
     }
 
     private void dfsRed(State s) throws Exception {
     	pink.color(s, Color.PINK);
-        List graphList = graph.post(s);
+        List<State> graphList = graph.post(s);
         for (int i = 0; i < graphList.size(); i++) {
-            State t = (State) graphList.get((i+threadId) % graphList.size());
+            State t = graphList.get((i+threadId) % graphList.size());
             if (colors.hasColor(t, Color.CYAN)) {
                 throw new CycleFoundException();
             } else if (!pink.hasColor(t, Color.PINK) && !red.hasColor(t, Color.RED)) {
@@ -48,16 +49,12 @@ public class Worker implements Runnable {
             }
         }
         if(s.isAccepting()){
-        	redStateCounter.getAndDecrement();
-            int counter =redStateCounter.get();
-        	while (counter != 0){
-                if(counter < 0) {
-                    throw new Exception("Something went wrong. This is not good.");
-                }
+        	int counter = redStateCounter.get(s.hashCode()).getAndDecrement();
+        	while (counter > 0){
                 if(Thread.currentThread().isInterrupted()) {
                     throw new Exception("Other threads are already done");
                 }
-                counter = redStateCounter.get();
+                counter = redStateCounter.get(s.hashCode()).get();
             }
         }
 
@@ -77,7 +74,7 @@ public class Worker implements Runnable {
             }
         }
         if (s.isAccepting()) {
-        	redStateCounter.getAndIncrement();
+        	redStateCounter.get(s.hashCode()).getAndIncrement();
         	dfsRed(s);
         }
         colors.color(s, Color.BLUE);
