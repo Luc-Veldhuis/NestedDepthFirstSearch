@@ -76,7 +76,9 @@ public class Worker implements Runnable {
             throw new Exception("Other threads are already done");
         }
         colors.color(s, Color.CYAN);
-        for (State t : graph.post(s)) {
+        List<State> graphList = graph.post(s);
+        for (int i = 0; i < graphList.size(); i++) {
+            State t = graphList.get((i+threadId) % graphList.size());
             if (colors.hasColor(t, Color.WHITE) && !red.hasColor(t,Color.RED)) {
                 dfsBlue(t);
             }
