@@ -28,5 +28,7 @@ init {
 	:: else -> break
 	od
 
-	accept_leaf: goto accept_leaf;
+	if
+	:: false
+	fi
 }
