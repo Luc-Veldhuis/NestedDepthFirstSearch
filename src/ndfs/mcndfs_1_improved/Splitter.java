@@ -8,6 +8,8 @@ import java.util.List;
 
 /**
  * Created by Luc on 9-10-2015.
+ *
+ * This Class is responsible for dividing child nodes evenly over the threads.
  */
 public class Splitter {
     public int start;
